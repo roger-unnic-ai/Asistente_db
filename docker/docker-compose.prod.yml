@@ -75,56 +75,8 @@ services:
       - "-c"
       - "log_rotation_size=100MB"
 
-  # ⭐ NUEVO SERVICIO: WEBAPP
-  webapp:
-    build:
-      context: ../../RAG-Webapp-database/RAG-Webapp-database  # Ajusta esta ruta según dónde esté tu Dockerfile
-      dockerfile: Dockerfile
-    container_name: rag_webapp_prod
-    env_file:
-      - .env
-    environment:
-      # ✅ Usa "postgres" como hostname (nombre del servicio)
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
-      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
-      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-}
-    ports:
-      - "5000:5000"  # Exponer al host para acceso externo
-    volumes:
-      - webapp_models:/app/models  # Persistir modelos FAISS entrenados
-      - webapp_logs:/app/logs      # Persistir logs (opcional)
-    networks:
-      - asistente_network
-    depends_on:
-      postgres:
-        condition: service_healthy  # ✅ Espera a que PostgreSQL esté listo
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s  # Más tiempo por el lazy loading
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G  # Más memoria para modelos ML
-        reservations:
-          cpus: '1.0'
-          memory: 2G
-
 volumes:
   postgres_data_prod:
-    driver: local
-  webapp_models:
-    driver: local
-  webapp_logs:
     driver: local
 
 networks:
