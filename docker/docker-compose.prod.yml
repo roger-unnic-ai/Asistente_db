@@ -4,6 +4,8 @@ services:
       context: ./postgres
       dockerfile: Dockerfile
     container_name: asistente_db_prod
+    env_file:
+      - .env.prod
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}

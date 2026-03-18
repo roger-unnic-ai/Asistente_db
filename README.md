@@ -146,21 +146,70 @@ docker ps | grep asistente_db
 
 ### Producción
 
-```bash
-# 1. Configurar variables seguras
-cat > .env.prod << EOF
-POSTGRES_USER=admin_user
-POSTGRES_PASSWORD=tu_password_muy_seguro
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB=asistente_db_prod
-EOF
+#### Opción 1: Deployment Automático (Recomendado)
 
+```bash
+# 1. Clonar repositorio en el servidor
+git clone https://github.com/TU_USUARIO/asistente-db.git
+cd asistente-db
+
+# 2. Ejecutar script de deployment
+sudo ./deploy-prod.sh
+
+# El script te pedirá que configures las contraseñas en docker/.env.prod
+```
+
+#### Opción 2: Deployment Manual
+
+```bash
+# 1. Clonar repositorio en el servidor
+git clone https://github.com/TU_USUARIO/asistente-db.git
+cd asistente-db
+
+# 2. Crear archivo .env.prod en la carpeta docker/
+cd docker
+cp .env.prod.example .env.prod
+nano .env.prod  # Editar y poner contraseñas seguras
+
+# Ejemplo de contenido de .env.prod:
+# POSTGRES_DB=asistente_db_prod
+# POSTGRES_USER=admin_user
+# POSTGRES_PASSWORD=tu_password_muy_seguro_aqui
+
+# 3. Proteger el archivo de variables
 chmod 600 .env.prod
 
-# 2. Cargar variables e iniciar
-export $(cat .env.prod | xargs)
-docker-compose -f docker/docker-compose.prod.yml up -d
+# 4. Crear la red Docker (primera vez solamente)
+docker network create asistente_network
+
+# 5. Iniciar base de datos
+docker-compose -f docker-compose.prod.yml up -d
+
+# 6. Verificar
+docker ps | grep asistente_db_prod
+docker logs asistente_db_prod
+```
+
+**⚠️ Importante:** El archivo `.env.prod` debe estar en la carpeta `docker/` (mismo nivel que `docker-compose.prod.yml`)
+
+**⚠️ Conexión desde tu Webapp:**
+
+Si tu webapp también está en Docker en el mismo servidor:
+
+```python
+# En el .env de tu webapp:
+DATABASE_URL=postgresql://admin_user:tu_password_muy_seguro@postgres:5432/asistente_db_prod
+```
+
+**Importante:** 
+- El hostname es `postgres` (nombre del servicio en docker-compose)
+- Ambos contenedores deben estar en la misma red Docker: `asistente_network`
+- Añade a tu `docker-compose` de la webapp:
+
+```yaml
+networks:
+  asistente_network:
+    external: true
 ```
 
 ---
@@ -199,11 +248,79 @@ docker exec -it asistente_db_dev psql -U postgres -d asistente_db
 ### Backup y Restore
 
 ```bash
+# DESARROLLO
 # Crear backup
 docker exec -t asistente_db_dev pg_dump -U postgres asistente_db > backup.sql
 
 # Restaurar
 docker exec -i asistente_db_dev psql -U postgres asistente_db < backup.sql
+
+# PRODUCCIÓN
+# Crear backup (usa las variables de .env.prod)
+docker exec -t asistente_db_prod pg_dump -U admin_user asistente_db_prod > backup_prod_$(date +%Y%m%d_%H%M%S).sql
+
+# Restaurar
+docker exec -i asistente_db_prod psql -U admin_user asistente_db_prod < backup_prod_20260318.sql
+
+# Backup automático en el contenedor (carpeta montada)
+docker exec asistente_db_prod pg_dump -U admin_user asistente_db_prod > /backups/auto_backup_$(date +%Y%m%d).sql
+```
+
+---
+
+## 🌐 Conexión desde tu Webapp (Producción)
+
+### Paso 1: Asegurar la Red Docker
+
+Tu `docker-compose.prod.yml` de la webapp debe incluir:
+
+```yaml
+services:
+  webapp:
+    # ... tu configuración ...
+    networks:
+      - asistente_network
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+networks:
+  asistente_network:
+    external: true
+```
+
+### Paso 2: Iniciar en el Orden Correcto
+
+```bash
+# 1. Primero la base de datos (crea la red)
+docker-compose -f docker/docker-compose.prod.yml up -d
+
+# 2. Luego tu webapp (se conecta a la red existente)
+docker-compose -f /ruta/a/tu/webapp/docker-compose.yml up -d
+```
+
+### Paso 3: Verificar Conexión
+
+```bash
+# Verificar que ambos estén en la misma red
+docker network inspect asistente_network
+
+# Debería mostrar:
+# - postgres (asistente_db_prod)
+# - tu_webapp_container
+```
+
+### Variables de Entorno para tu Webapp
+
+```bash
+# Opción 1: Usar la misma .env.prod
+DATABASE_URL=postgresql://admin_user:tu_password_muy_seguro@postgres:5432/asistente_db_prod
+
+# Opción 2: Variables separadas (más flexible)
+POSTGRES_USER=admin_user
+POSTGRES_PASSWORD=tu_password_muy_seguro
+POSTGRES_HOST=postgres  # ⚠️ Importante: nombre del servicio
+POSTGRES_PORT=5432
+POSTGRES_DB=asistente_db_prod
 ```
 
 ---
@@ -278,11 +395,14 @@ Asistente DB/
 
 ## 🔒 Seguridad (Producción)
 
-- No exponer puerto 5432 al host
-- Usar passwords seguros (mínimo 20 caracteres)
-- Guardar .env.prod fuera de git
-- Conexión solo desde red interna Docker
-- Backups regulares automáticos
+- ✅ Puerto 5432 NO expuesto al host (solo `expose` interno)
+- ✅ Conexión solo desde red interna Docker (`asistente_network`)
+- ✅ Passwords seguros (mínimo 20 caracteres aleatorios)
+- ✅ Archivo `.env.prod` excluido de git (.gitignore)
+- ✅ `chmod 600` en archivos .env
+- ✅ Backups regulares (carpeta `/backups` montada)
+- ✅ Límites de recursos configurados (2GB RAM, 2 CPUs)
+- ✅ Logs rotados automáticamente (diarios, max 100MB)
 
 ---
 
