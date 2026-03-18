@@ -66,15 +66,7 @@ services:
       - "log_destination=stderr"
       - "-c"
       - "logging_collector=on"
-      - "-c"
-      - "log_directory=/var/log/postgresql"
-      - "-c"
-      - "log_filename=postgresql-%Y-%m-%d.log"
-      - "-c"
-      - "log_rotation_age=1d"
-      - "-c"
-      - "log_rotation_size=100MB"
-
+    
 volumes:
   postgres_data_prod:
     driver: local
