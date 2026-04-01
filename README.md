@@ -118,6 +118,7 @@ Preguntas pendientes de resolver.
 - status (pending/resolved/dismissed)
 - resolved_by (FK → users)
 - resolved_at, resolution_notes
+- comment (TEXT, opcional)
 - created_at, updated_at
 ```
 

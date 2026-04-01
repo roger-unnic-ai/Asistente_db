@@ -197,6 +197,7 @@ CREATE TABLE unresolved_questions (
     resolved_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     resolved_at TIMESTAMPTZ,
     resolution_notes TEXT,
+    comment TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

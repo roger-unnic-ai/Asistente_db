@@ -298,6 +298,7 @@ class UnresolvedQuestion(Base):
     resolved_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), index=True)
     resolved_at = Column(TIMESTAMP(timezone=True))
     resolution_notes = Column(Text)
+    comment = Column(Text)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), index=True)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
     
