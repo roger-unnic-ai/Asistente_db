@@ -1,4 +1,4 @@
-FROM postgres:16-alpine
+FROM pgvector/pgvector:pg16
 
 # Set locale
 ENV LANG=es_ES.utf8

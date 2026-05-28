@@ -11,6 +11,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
 import uuid
 import enum
 
@@ -207,6 +208,7 @@ class DocumentChunk(Base):
     source_document = Column(String(500), index=True)
     chunk_index = Column(Integer, nullable=False)
     faiss_vector_index = Column(Integer, index=True)
+    embedding = Column(Vector(384), nullable=True)
     document_type = Column(String(100))
     chunk_metadata = Column(JSONB)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
