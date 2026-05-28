@@ -2,8 +2,8 @@ FROM pgvector/pgvector:pg16
 
 # Install and generate es_ES.UTF-8 locale (required by postgresql.conf from existing data volumes)
 RUN apt-get update && apt-get install -y --no-install-recommends locales \
-    && locale-gen es_ES.UTF-8 \
-    && update-locale LANG=es_ES.UTF-8 \
+    && echo "es_ES.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen \
     && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=es_ES.UTF-8
