@@ -6,6 +6,9 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Enable pgvector extension for vector similarity search
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- ============================================
 -- 1. USERS TABLE
 -- ============================================
@@ -128,6 +131,7 @@ CREATE TABLE document_chunks (
     source_document VARCHAR(500),
     chunk_index INTEGER NOT NULL,
     faiss_vector_index INTEGER,
+    embedding vector(384),
     document_type VARCHAR(100),
     chunk_metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -139,6 +143,8 @@ CREATE INDEX idx_document_chunks_document_reference_id ON document_chunks(docume
 CREATE INDEX idx_document_chunks_source_document ON document_chunks(source_document);
 CREATE INDEX idx_document_chunks_faiss_vector_index ON document_chunks(faiss_vector_index);
 CREATE INDEX idx_document_chunks_chunk_metadata ON document_chunks USING GIN (chunk_metadata);
+-- HNSW index for vector similarity search (created after data is loaded for better performance)
+-- CREATE INDEX idx_document_chunks_embedding ON document_chunks USING hnsw (embedding vector_l2_ops);
 
 -- ============================================
 -- 7. CHAT_THREADS TABLE
@@ -249,7 +255,7 @@ COMMENT ON TABLE models IS 'Stores AI models configuration (general, devs, etc.)
 COMMENT ON TABLE user_model_access IS 'Many-to-many relationship between users and models';
 COMMENT ON TABLE document_references IS 'Stores references to SharePoint documents and folders';
 COMMENT ON TABLE documents IS 'Stores uploaded documents content in binary format';
-COMMENT ON TABLE document_chunks IS 'Stores document chunks metadata (vectors stored in FAISS)';
+COMMENT ON TABLE document_chunks IS 'Stores document chunks with text and vector embeddings for pgvector similarity search';
 COMMENT ON TABLE chat_threads IS 'Stores chat conversation threads';
 COMMENT ON TABLE chat_messages IS 'Stores individual messages within chat threads';
 COMMENT ON TABLE unresolved_questions IS 'Stores questions that need admin attention';

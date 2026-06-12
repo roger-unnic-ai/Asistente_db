@@ -31,10 +31,10 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 2G
+          memory: 4G
         reservations:
           cpus: '1.0'
-          memory: 1G
+          memory: 2G
     # Configuraciones adicionales de seguridad
     command: 
       - "postgres"
@@ -45,7 +45,7 @@ services:
       - "-c"
       - "effective_cache_size=1GB"
       - "-c"
-      - "maintenance_work_mem=64MB"
+      - "maintenance_work_mem=256MB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
@@ -57,7 +57,7 @@ services:
       - "-c"
       - "effective_io_concurrency=200"
       - "-c"
-      - "work_mem=2621kB"
+      - "work_mem=64MB"
       - "-c"
       - "min_wal_size=1GB"
       - "-c"

@@ -1,7 +1,13 @@
-FROM postgres:16-alpine
+FROM pgvector/pgvector:pg16
 
-# Set locale
-ENV LANG=es_ES.utf8
+# Install and generate es_ES.UTF-8 locale (required by postgresql.conf from existing data volumes)
+RUN apt-get update && apt-get install -y --no-install-recommends locales \
+    && echo "es_ES.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=es_ES.UTF-8
+ENV LC_ALL=es_ES.UTF-8
 
 # Copy initialization script
 COPY init.sql /docker-entrypoint-initdb.d/
