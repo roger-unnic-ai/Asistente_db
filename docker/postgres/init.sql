@@ -132,6 +132,7 @@ CREATE TABLE document_chunks (
     chunk_index INTEGER NOT NULL,
     faiss_vector_index INTEGER,
     embedding vector(384),
+    file_key TEXT,
     document_type VARCHAR(100),
     chunk_metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -143,8 +144,26 @@ CREATE INDEX idx_document_chunks_document_reference_id ON document_chunks(docume
 CREATE INDEX idx_document_chunks_source_document ON document_chunks(source_document);
 CREATE INDEX idx_document_chunks_faiss_vector_index ON document_chunks(faiss_vector_index);
 CREATE INDEX idx_document_chunks_chunk_metadata ON document_chunks USING GIN (chunk_metadata);
+CREATE INDEX idx_dc_file_key ON document_chunks(model_id, file_key);
 -- HNSW index for vector similarity search (created after data is loaded for better performance)
 -- CREATE INDEX idx_document_chunks_embedding ON document_chunks USING hnsw (embedding vector_l2_ops);
+
+-- ============================================
+-- 10. INDEXED_FILES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS indexed_files (
+    id           SERIAL PRIMARY KEY,
+    model_id     INTEGER NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+    file_key     TEXT NOT NULL,
+    file_name    TEXT,
+    content_hash TEXT,
+    indexed_at   TIMESTAMPTZ DEFAULT now(),
+    chunk_count  INTEGER DEFAULT 0,
+    status       VARCHAR(20) DEFAULT 'indexed',
+    CONSTRAINT uq_indexed_files_model_file UNIQUE (model_id, file_key)
+);
+
+CREATE INDEX idx_indexed_files_model ON indexed_files(model_id);
 
 -- ============================================
 -- 7. CHAT_THREADS TABLE
@@ -256,6 +275,7 @@ COMMENT ON TABLE user_model_access IS 'Many-to-many relationship between users a
 COMMENT ON TABLE document_references IS 'Stores references to SharePoint documents and folders';
 COMMENT ON TABLE documents IS 'Stores uploaded documents content in binary format';
 COMMENT ON TABLE document_chunks IS 'Stores document chunks with text and vector embeddings for pgvector similarity search';
+COMMENT ON TABLE indexed_files IS 'Tracks indexed files per model with content hash for incremental sync';
 COMMENT ON TABLE chat_threads IS 'Stores chat conversation threads';
 COMMENT ON TABLE chat_messages IS 'Stores individual messages within chat threads';
 COMMENT ON TABLE unresolved_questions IS 'Stores questions that need admin attention';
