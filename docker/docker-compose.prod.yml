@@ -10,15 +10,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    # NO exponemos puertos directamente en producción
-    # La aplicación debe conectarse a través de la red interna de Docker
     expose:
       - "5432"
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
-      - ./backups:/backups  # Para backups manuales
+      - ./backups:/backups
     networks:
       - asistente_network
+    shm_size: '2gb'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 30s
@@ -26,7 +25,6 @@ services:
       retries: 3
       start_period: 40s
     restart: always
-    # Límites de recursos para producción
     deploy:
       resources:
         limits:
@@ -35,7 +33,6 @@ services:
         reservations:
           cpus: '1.0'
           memory: 2G
-    # Configuraciones adicionales de seguridad
     command: 
       - "postgres"
       - "-c"
@@ -45,7 +42,7 @@ services:
       - "-c"
       - "effective_cache_size=1GB"
       - "-c"
-      - "maintenance_work_mem=256MB"
+      - "maintenance_work_mem=1GB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
@@ -66,7 +63,7 @@ services:
       - "log_destination=stderr"
       - "-c"
       - "logging_collector=on"
-    
+
 volumes:
   postgres_data_prod:
     driver: local
