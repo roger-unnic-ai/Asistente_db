@@ -77,6 +77,7 @@ class User(Base):
     uploaded_documents = relationship("Document", back_populates="uploaded_by_user")
     granted_accesses = relationship("UserModelAccess", back_populates="granted_by_user", foreign_keys="[UserModelAccess.granted_by]")
     resolved_questions = relationship("UnresolvedQuestion", back_populates="resolved_by_user", foreign_keys="[UnresolvedQuestion.resolved_by]")
+    skills = relationship("UserSkill", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"
@@ -339,3 +340,28 @@ class UnresolvedQuestion(Base):
     
     def __repr__(self):
         return f"<UnresolvedQuestion(id={self.id}, status='{self.status}', user_id={self.user_id})>"
+
+
+# ============================================
+# 11. USER_SKILLS TABLE
+# ============================================
+
+class UserSkill(Base):
+    __tablename__ = "user_skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    keyword = Column(String(100), nullable=False)
+    explanation = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "keyword", name="uq_user_skill_keyword"),
+    )
+
+    # Relationships
+    user = relationship("User", back_populates="skills")
+
+    def __repr__(self):
+        return f"<UserSkill(id={self.id}, user_id={self.user_id}, keyword='{self.keyword}')>"

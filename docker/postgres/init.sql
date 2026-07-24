@@ -266,6 +266,26 @@ CREATE TRIGGER update_unresolved_questions_updated_at BEFORE UPDATE ON unresolve
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- 11. USER_SKILLS TABLE
+-- ============================================
+CREATE TABLE user_skills (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    keyword VARCHAR(100) NOT NULL,
+    explanation TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user_skills_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_user_skill_keyword UNIQUE (user_id, keyword)
+);
+
+CREATE INDEX ix_user_skills_user_id ON user_skills(user_id);
+
+-- Trigger for user_skills table
+CREATE TRIGGER update_user_skills_updated_at BEFORE UPDATE ON user_skills
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
 -- Comments for documentation
 -- ============================================
 
@@ -279,6 +299,7 @@ COMMENT ON TABLE indexed_files IS 'Tracks indexed files per model with content h
 COMMENT ON TABLE chat_threads IS 'Stores chat conversation threads';
 COMMENT ON TABLE chat_messages IS 'Stores individual messages within chat threads';
 COMMENT ON TABLE unresolved_questions IS 'Stores questions that need admin attention';
+COMMENT ON TABLE user_skills IS 'Stores personalized instructions (skills) per user applied automatically in conversations';
 
 -- ============================================
 -- Grant permissions (adjust as needed)
