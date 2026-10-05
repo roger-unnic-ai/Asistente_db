@@ -273,6 +273,8 @@ CREATE TABLE user_skills (
     user_id INTEGER NOT NULL,
     keyword VARCHAR(100) NOT NULL,
     explanation TEXT NOT NULL,
+    description TEXT NULL,
+    always_apply BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_user_skills_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

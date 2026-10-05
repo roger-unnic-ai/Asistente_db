@@ -374,6 +374,7 @@ Asistente DB/
 │   ├── __init__.py
 │   ├── database.py
 │   └── models.py
+├── migrations/          # ALTERs incrementales para BDs ya creadas (init.sql solo corre en volumen vacío)
 ├── .env.dev
 ├── .env.prod
 ├── .gitignore

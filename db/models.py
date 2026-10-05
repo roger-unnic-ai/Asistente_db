@@ -353,6 +353,8 @@ class UserSkill(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     keyword = Column(String(100), nullable=False)
     explanation = Column(Text, nullable=False)
+    description = Column(Text, nullable=True)
+    always_apply = Column(Boolean, nullable=False, default=False, server_default="false")
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
